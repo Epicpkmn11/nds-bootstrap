@@ -23,15 +23,18 @@
 #ifndef CARD9_H
 #define CARD9_H
 
+#include <string.h> // memcpy
+
+#include "locations.h"
 #include "my_disc_io.h"
 
 extern vu32* volatile sharedAddr;
 
 static inline bool CARD_StartUp(void) {
-	/*sharedAddr[4] = 0x53545254;
+	/*sharedAddr[3] = 0x53545254;
 
-	while (sharedAddr[4] != (vu32)0);
-	return sharedAddr[4];*/
+	while (sharedAddr[3] == (vu32)0x53545254);
+	return sharedAddr[3];*/
 	return true;
 }
 
@@ -41,24 +44,24 @@ static inline bool CARD_IsInserted(void) {
 
 static inline bool CARD_ReadSector(u32 sector, void *buffer, u32 startOffset, u32 endOffset) {
 	sharedAddr[0] = sector;
-	sharedAddr[1] = (vu32)buffer;
-	sharedAddr[2] = startOffset;
-	sharedAddr[3] = endOffset;
-	sharedAddr[4] = 0x52534354;
+	memcpy((u32*)ROM_FAT_BUFFER_LOCATION, buffer, BYTES_PER_SECTOR);
+	sharedAddr[1] = startOffset;
+	sharedAddr[2] = endOffset;
+	sharedAddr[3] = 0x52534354;
 
-	while (sharedAddr[4] == (vu32)0x52534354);
-	return sharedAddr[4];
+	while (sharedAddr[3] == (vu32)0x52534354);
+	return sharedAddr[3];
 }
 
 static inline bool CARD_ReadSectors(u32 sector, int count, void *buffer, int ndmaSlot) {
 	sharedAddr[0] = sector;
 	sharedAddr[1] = count;
-	sharedAddr[2] = (vu32)buffer;
-	sharedAddr[3] = ndmaSlot;
-	sharedAddr[4] = 0x52534353;
+	memcpy((u32*)ROM_FAT_BUFFER_LOCATION, buffer, BYTES_PER_SECTOR);
+	sharedAddr[2] = ndmaSlot;
+	sharedAddr[3] = 0x52534353;
 
-	while (sharedAddr[4] == (vu32)0x52534353);
-	return sharedAddr[4];
+	while (sharedAddr[3] == (vu32)0x52534353);
+	return sharedAddr[3];
 }
 
 /*static inline bool CARD_WriteSector(u32 sector, const void *buffer, int ndmaSlot) {

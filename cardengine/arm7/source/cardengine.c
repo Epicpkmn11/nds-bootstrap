@@ -375,22 +375,20 @@ static void runCardEngineCheck(void) {
             } 
         }*/
 		
-		/*if (*(vu32*)(0x027FFB18) == (vu32)0x53545254) {
-			*(vu32*)(0x027FFB18) = __myio_dsisd.startup();
+		/*if (*(vu32*)(0x027FFB14) == (vu32)0x53545254) {
+			*(vu32*)(0x027FFB14) = sdmmc_init();
 		}*/
-		if (*(vu32*)(0x027FFB18) == (vu32)0x52534354) {
+		if (*(vu32*)(0x027FFB14) == (vu32)0x52534354) {
 			u32 sector = *(vu32*)(sharedAddr);
-			void *buffer = *(vu32*)(sharedAddr + 1);
-			u32 startOffset = *(vu32*)(sharedAddr + 2);
-			u32 endOffset = *(vu32*)(sharedAddr + 3);
-			*(vu32*)(0x027FFB18) = my_sdmmc_sdcard_readsector(sector, buffer, startOffset, endOffset);
+			u32 startOffset = *(vu32*)(sharedAddr + 1);
+			u32 endOffset = *(vu32*)(sharedAddr + 2);
+			*(vu32*)(0x027FFB14) = my_sdmmc_sdcard_readsector(sector, (void*)ROM_FAT_BUFFER_LOCATION, startOffset, endOffset);
 		}
-		if (*(vu32*)(0x027FFB18) == (vu32)0x52534353) {
+		if (*(vu32*)(0x027FFB14) == (vu32)0x52534353) {
 			u32 sector = *(vu32*)(sharedAddr);
 			int count = *(vu32*)(sharedAddr + 1);
-			void *buffer = *(vu32*)(sharedAddr + 2);
-			int ndmaSlot = *(vu32*)(sharedAddr + 3);
-			*(vu32*)(0x027FFB18) = my_sdmmc_sdcard_readsectors(sector, count, buffer, ndmaSlot);
+			int ndmaSlot = *(vu32*)(sharedAddr + 2);
+			*(vu32*)(0x027FFB14) = my_sdmmc_sdcard_readsectors(sector, count, (void*)ROM_FAT_BUFFER_LOCATION, ndmaSlot);
 		}
   		unlockMutex(&cardEgnineCommandMutex);
   	}
