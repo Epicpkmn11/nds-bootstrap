@@ -589,6 +589,8 @@ int arm7_main(void) {
 	}
 	
 	buildFatTableCache(romFile, 3);
+	
+	memcpy((u32*)ROM_CLUSTER_CACHE_LOCATION, (u32*)0x3700000, 0x80000);
 
 	// Sav file
 	aFile* savFile = (aFile*)SAV_FILE_LOCATION;
