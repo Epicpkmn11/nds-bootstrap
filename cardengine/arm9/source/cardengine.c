@@ -348,7 +348,7 @@ bool cardReadDma() {
 	void* arg  = cardStruct[5]; // arguments of the function above
     
     return false;
-)
+}
 
 int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 	//nocashMessage("\narm9 cardRead\n");
