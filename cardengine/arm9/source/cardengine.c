@@ -348,7 +348,7 @@ bool cardReadDma() {
 	void* arg  = cardStruct[5]; // arguments of the function above
     
     if(dma > 0 && func != NULL) {
-        return false;                
+        //return false;                
     } else {
         return false;
     }
