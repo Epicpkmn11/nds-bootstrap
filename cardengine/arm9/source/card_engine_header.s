@@ -127,10 +127,14 @@ card_id_arm9:
 @---------------------------------------------------------------------------------
 card_dma_arm9:
 @---------------------------------------------------------------------------------
+    push	{r3-r7, lr}
+
 	ldr		r6, =cardReadDma
 
 	bl		_blx_r3_stub_card_read_dma	
+    
 
+	pop	{r3-r7, pc}
 	bx      lr
 _blx_r3_stub_card_read_dma:
 	bx	r6	
@@ -158,10 +162,13 @@ thumb_card_id_arm9:
 @---------------------------------------------------------------------------------
 thumb_card_dma_arm9:
 @---------------------------------------------------------------------------------
+    push	{r3-r7, lr}
+    
 	ldr		r6, =cardReadDma
 
 	bl		_blx_r3_stub_thumb_card_read_dma	
 
+    pop	{r3-r7, pc}
 	bx      lr
 _blx_r3_stub_thumb_card_read_dma:
 	bx	r6	

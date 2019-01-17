@@ -347,7 +347,11 @@ bool cardReadDma() {
 	void* func = cardStruct[4]; // function to call back once read done
 	void* arg  = cardStruct[5]; // arguments of the function above
     
-    return false;
+    if(dma > 0 && func != NULL) {
+        return false;                
+    } else {
+        return false;
+    }
 }
 
 int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
