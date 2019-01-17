@@ -337,6 +337,19 @@ void __attribute__((target("arm"))) debug8mbMpuFix(){
 	asm("MOV R0,#0\n\tmcr p15, 0, r0, C6,C2,0");
 }
 
+bool cardReadDma() {
+	vu32* volatile cardStruct = cardStruct0;
+
+	u32 src = cardStruct[0];
+	u8* dst = (u8*)(cardStruct[1]);
+	u32 len = cardStruct[2];
+    u32	dma = cardStruct[3]; // dma channel
+	void* func = cardStruct[4]; // function to call back once read done
+	void* arg  = cardStruct[5]; // arguments of the function above
+    
+    return false;
+)
+
 int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 	//nocashMessage("\narm9 cardRead\n");
 	if (!flagsSet) {
