@@ -86,7 +86,7 @@ card_read_arm9:
 	ldr		r6, =cardRead
 	bl		_blx_r3_stub_card_read
 
-	ldmfd   sp!, {r4-r11,lr}
+	ldmfd   sp!, {r4-r11,pc}
 	bx      lr
 _blx_r3_stub_card_read:
 	bx	r6
@@ -127,14 +127,14 @@ card_id_arm9:
 @---------------------------------------------------------------------------------
 card_dma_arm9:
 @---------------------------------------------------------------------------------
-    push	{r3-r7, lr}
+    stmfd   sp!, {r3-r11,lr}
 
 	ldr		r6, =cardReadDma
 
 	bl		_blx_r3_stub_card_read_dma	
     
 
-	pop	{r3-r7, pc}
+	ldmfd   sp!, {r3-r11,pc}
 	bx      lr
 _blx_r3_stub_card_read_dma:
 	bx	r6	
