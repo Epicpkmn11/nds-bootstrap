@@ -71,6 +71,7 @@ static u32 cacheAddress = CACHE_ADRESS_START;
 static u16 cacheSlots = retail_CACHE_SLOTS_32KB;
 
 static bool flagsSet = false;
+static bool isDma = false;
 
 static int allocateCacheSlot(void) {
 	int slot = 0;
@@ -174,7 +175,9 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 			// Read max CACHE_READ_SIZE via the main RAM cache
 			if (slot == -1) {
 				// Send a command to the ARM7 to fill the RAM cache
-				commandRead = 0x025FFB08;
+                commandRead = 0x025FFB08;
+				//if(!isDma) commandRead = 0x025FFB08;
+                //else commandRead = 0x025FFB16, 
 
 				slot = allocateCacheSlot();
 
@@ -348,8 +351,10 @@ bool cardReadDma() {
 	void* arg  = cardStruct[5]; // arguments of the function above
     
     if(dma > 0 && func != NULL) {
-        //return false;                
+        isDma = true;
+        return false;                
     } else {
+        isDma = false;
         return false;
     }
 }
@@ -430,5 +435,7 @@ int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 		src = 0x8000 + (src & 0x1FF);
 	}
 
-	return ROMinRAM ? cardReadRAM(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage) : cardReadNormal(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage);
+	int ret =  ROMinRAM ? cardReadRAM(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage) : cardReadNormal(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage);
+    isDma = false;
+    return ret;
 }

@@ -84,6 +84,8 @@ static int saveMutex = 0;
 static const tNDSHeader* ndsHeader = NULL;
 static const char* romLocation = NULL;
 
+static bool isDma = false;
+
 static void unlaunchSetHiyaBoot(void) {
 	memcpy((u8*)0x02000800, unlaunchAutoLoadID, 12);
 	*(u16*)(0x0200080C) = 0x3F0;		// Unlaunch Length for CRC16 (fixed, must be 3F0h)
@@ -186,7 +188,7 @@ static void cardReadLED(bool on) {
 	}
 }
 
-/*static void asyncCardReadLED(bool on) {
+static void purpleCardReadLED(bool on) {
 	if (consoleModel < 2) {
 		if (on) {
 			switch(romread_LED) {
@@ -214,7 +216,7 @@ static void cardReadLED(bool on) {
 			}
 		}
 	}
-}*/
+}
 
 static void log_arm9(void) {
 	#ifdef DEBUG
@@ -270,7 +272,10 @@ static bool start_cardRead_arm9(void) {
 	dbg_hexa(marker);	
 	#endif
 
-	cardReadLED(true);    // When a file is loading, turn on LED for card read indicator
+    if(!isDma)
+	   cardReadLED(true);    // When a file is loading, turn on LED for card read indicator
+     else
+        purpleCardReadLED(true);    // After loading is done, turn off LED for card read indicator
 	#ifdef DEBUG
 	nocashMessage("fileRead romFile");
 	#endif
@@ -288,7 +293,10 @@ static bool start_cardRead_arm9(void) {
     	if (*(u32*)(0x0C9328AC) == 0x4B434148) {
     		*(u32*)(0x0C9328AC) = 0xA00;
     	}
-        cardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        if(!isDma)
+            cardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        else
+            purpleCardReadLED(false);    // After loading is done, turn off LED for card read indicator
         return true;    
     }
 
@@ -311,7 +319,10 @@ static bool resume_cardRead_arm9(void) {
     	if (*(u32*)(0x0C9328AC) == 0x4B434148) {
     		*(u32*)(0x0C9328AC) = 0xA00;
     	}
-        cardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        if(!isDma)
+            cardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        else
+            purpleCardReadLED(false);    // After loading is done, turn off LED for card read indicator
         return true;    
     } 
     else
@@ -345,12 +356,12 @@ static bool resume_cardRead_arm9(void) {
 	dbg_hexa(marker);	
 	#endif
 
-	asyncCardReadLED(true);    // When a file is loading, turn on LED for async card read indicator
+	purpleCardReadLED(true);    // When a file is loading, turn on LED for async card read indicator
 	#ifdef DEBUG
 	nocashMessage("fileRead romFile");
 	#endif
 	fileRead((char*)dst, *romFile, src, len, 0);
-	asyncCardReadLED(false);    // After loading is done, turn off LED for async card read indicator
+	purpleCardReadLED(false);    // After loading is done, turn off LED for async card read indicator
 
 	#ifdef DEBUG
 	dbg_printf("\nread \n");
@@ -402,6 +413,16 @@ static void runCardEngineCheck(void) {
   
   
       		if (*(vu32*)(0x027FFB14) == (vu32)0x025FFB08) {
+                isDma = false;
+      			if(start_cardRead_arm9()) {
+                    *(vu32*)(0x027FFB14) = 0;
+                } 
+                
+      			
+      		}
+            
+            if (*(vu32*)(0x027FFB14) == (vu32)0x025FFB16) {
+                isDma = true;
       			if(start_cardRead_arm9()) {
                     *(vu32*)(0x027FFB14) = 0;
                 } 
