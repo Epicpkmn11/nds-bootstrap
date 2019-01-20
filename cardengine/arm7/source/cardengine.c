@@ -223,7 +223,7 @@ static void log_arm9(void) {
 	u32 src = *(vu32*)(sharedAddr+2);
 	u32 dst = *(vu32*)(sharedAddr);
 	u32 len = *(vu32*)(sharedAddr+1);
-	u32 marker = *(vu32*)(sharedAddr+3);
+	u32 marker = *(vu32*)(sharedAddr+4);
 
 	dbg_printf("\ncard read received\n");
 
@@ -251,8 +251,9 @@ static bool start_cardRead_arm9(void) {
 	u32 src = *(vu32*)(sharedAddr + 2);
 	u32 dst = *(vu32*)(sharedAddr);
 	u32 len = *(vu32*)(sharedAddr + 1);
+	isDma = *(vu32*)(sharedAddr + 3);
 	#ifdef DEBUG
-	u32 marker = *(vu32*)(sharedAddr + 3);
+	u32 marker = *(vu32*)(sharedAddr + 4);
 
 	dbg_printf("\ncard read received v2\n");
 
@@ -385,7 +386,7 @@ static void runCardEngineCheckResume(void) {
 		if(readOngoing)
 		{
 			if(resume_cardRead_arm9()) {
-				*(vu32*)(0x027FFB14) = 0;
+				*(vu32*)(0x027FFB18) = 0;
 			} 
 		}
   		unlockMutex(&cardEgnineCommandMutex);
@@ -406,37 +407,27 @@ static void runCardEngineCheck(void) {
   
   		//nocashMessage("runCardEngineCheck mutex ok");
   
-  		if (*(vu32*)(0x027FFB14) == (vu32)0x026FF800) {
+  		if (*(vu32*)(0x027FFB18) == (vu32)0x026FF800) {
   			log_arm9();
-  			*(vu32*)(0x027FFB14) = 0;
+  			*(vu32*)(0x027FFB18) = 0;
   		}
   
   
-      		if (*(vu32*)(0x027FFB14) == (vu32)0x025FFB08) {
-                isDma = false;
+      		if (*(vu32*)(0x027FFB18) == (vu32)0x025FFB08) {
       			if(start_cardRead_arm9()) {
-                    *(vu32*)(0x027FFB14) = 0;
+                    *(vu32*)(0x027FFB18) = 0;
                 } 
                 
       			
       		}
-            
-            if (*(vu32*)(0x027FFB14) == (vu32)0x025FFB16) {
-                isDma = true;
-      			if(start_cardRead_arm9()) {
-                    *(vu32*)(0x027FFB14) = 0;
-                } 
-                
-      			
-      		}
-  
-  		/*if (*(vu32*)(0x027FFB14) == (vu32)0x020FF800) {
+
+  		/*if (*(vu32*)(0x027FFB18) == (vu32)0x020FF800) {
   			asyncCardRead_arm9();
-  			*(vu32*)(0x027FFB14) = 0;
+  			*(vu32*)(0x027FFB18) = 0;
   		}*/
         } else {
             if(resume_cardRead_arm9()) {
-                *(vu32*)(0x027FFB14) = 0;
+                *(vu32*)(0x027FFB18) = 0;
             } 
         }
   		unlockMutex(&cardEgnineCommandMutex);
@@ -457,28 +448,28 @@ static void runCardEngineCheck(void) {
   
   		//nocashMessage("runCardEngineCheck mutex ok");
   
-  		if (*(vu32*)(0x027FFB14) == (vu32)0x026FF800) {
+  		if (*(vu32*)(0x027FFB18) == (vu32)0x026FF800) {
   			log_arm9();
-  			*(vu32*)(0x027FFB14) = 0;
+  			*(vu32*)(0x027FFB18) = 0;
   		}
   
   
-      		if (*(vu32*)(0x027FFB14) == (vu32)0x025FFB08) {
+      		if (*(vu32*)(0x027FFB18) == (vu32)0x025FFB08) {
       			if(start_cardRead_arm9()) {
-                    *(vu32*)(0x027FFB14) = 0;
+                    *(vu32*)(0x027FFB18) = 0;
                 } else {
                     while(!resume_cardRead_arm9()) {} 
-                    *(vu32*)(0x027FFB14) = 0;
+                    *(vu32*)(0x027FFB18) = 0;
                 } 			
       		}
   
-  		//if (*(vu32*)(0x027FFB14) == (vu32)0x020FF800) {
+  		//if (*(vu32*)(0x027FFB18) == (vu32)0x020FF800) {
   		//	asyncCardRead_arm9();
-  		//	*(vu32*)(0x027FFB14) = 0;
+  		//	*(vu32*)(0x027FFB18) = 0;
   		//}
         } else {
             while(!resume_cardRead_arm9()) {} 
-            *(vu32*)(0x027FFB14) = 0; 
+            *(vu32*)(0x027FFB18) = 0; 
         }
   		unlockMutex(&cardEgnineCommandMutex);
   	}

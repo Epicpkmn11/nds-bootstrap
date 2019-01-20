@@ -110,7 +110,7 @@ static void updateDescriptor(int slot, u32 sector) {
 static void waitForArm7(void) {
     IPC_SendSync(0xEE24);
     int count = 0;
-	while (sharedAddr[3] != (vu32)0) {
+	while (sharedAddr[4] != (vu32)0) {
         count++;
         if(count==20000000){
             IPC_SendSync(0xEE24);
@@ -161,7 +161,8 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 		sharedAddr[0] = (vu32)dst;
 		sharedAddr[1] = len;
 		sharedAddr[2] = src;
-		sharedAddr[3] = commandRead;
+		sharedAddr[3] = isDma;
+		sharedAddr[4] = commandRead;
 
 		waitForArm7();
 
@@ -176,8 +177,6 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 			if (slot == -1) {
 				// Send a command to the ARM7 to fill the RAM cache
                 commandRead = 0x025FFB08;
-				//if(!isDma) commandRead = 0x025FFB08;
-                //else commandRead = 0x025FFB16, 
 
 				slot = allocateCacheSlot();
 
@@ -189,7 +188,8 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 				sharedAddr[0] = (vu32)buffer;
 				sharedAddr[1] = readSize;
 				sharedAddr[2] = sector;
-				sharedAddr[3] = commandRead;
+				sharedAddr[3] = isDma;
+				sharedAddr[4] = commandRead;
 
 				waitForArm7();
 
@@ -217,7 +217,8 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 				sharedAddr[0] = dst;
 				sharedAddr[1] = len2;
 				sharedAddr[2] = buffer+src-sector;
-				sharedAddr[3] = commandRead;
+				sharedAddr[3] = false;
+				sharedAddr[4] = commandRead;
 
 				waitForArm7();
 				// -------------------------------------*/
@@ -239,7 +240,8 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 				sharedAddr[0] = page;
 				sharedAddr[1] = len2;
 				sharedAddr[2] = buffer+page-sector;
-				sharedAddr[3] = commandRead;
+				sharedAddr[3] = false;
+				sharedAddr[4] = commandRead;
 
 				waitForArm7();
 				// -------------------------------------
@@ -270,6 +272,7 @@ static inline int cardReadNormal(vu32* volatile cardStruct, u32* cacheStruct, u8
 		cacheFlush(); //workaround for some weird data-cache issue in Bowser's Inside Story.
 	}
 
+    isDma = false;
 	return 0;
 }
 
@@ -291,7 +294,8 @@ static inline int cardReadRAM(vu32* volatile cardStruct, u32* cacheStruct, u8* d
 			sharedAddr[0] = dst;
 			sharedAddr[1] = len;
 			sharedAddr[2] = (dsiMode ? dev_CACHE_ADRESS_START_SDK5 : romLocation)-0x4000-ndsHeader->arm9binarySize)+src;
-			sharedAddr[3] = commandRead;
+			sharedAddr[3] = false;
+			sharedAddr[4] = commandRead;
 
 			waitForArm7();
 			// -------------------------------------
@@ -313,7 +317,8 @@ static inline int cardReadRAM(vu32* volatile cardStruct, u32* cacheStruct, u8* d
 			sharedAddr[0] = page;
 			sharedAddr[1] = len2;
 			sharedAddr[2] = ((dsiMode ? dev_CACHE_ADRESS_START_SDK5 : romLocation)-0x4000-ndsHeader->arm9binarySize)+page;
-			sharedAddr[3] = commandRead;
+			sharedAddr[3] = false;
+			sharedAddr[4] = commandRead;
 
 			waitForArm7();
 			// -------------------------------------
@@ -332,6 +337,7 @@ static inline int cardReadRAM(vu32* volatile cardStruct, u32* cacheStruct, u8* d
 		}
 	}
 
+    isDma = false;
 	return 0;
 }
 
@@ -419,7 +425,8 @@ int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 	sharedAddr[0] = dst;
 	sharedAddr[1] = len;
 	sharedAddr[2] = src;
-	sharedAddr[3] = commandRead;
+	sharedAddr[3] = false;
+	sharedAddr[4] = commandRead;
 
 	waitForArm7();
 	// -------------------------------------*/
@@ -435,7 +442,5 @@ int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 		src = 0x8000 + (src & 0x1FF);
 	}
 
-	int ret =  ROMinRAM ? cardReadRAM(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage) : cardReadNormal(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage);
-    isDma = false;
-    return ret;
+	return ROMinRAM ? cardReadRAM(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage) : cardReadNormal(cardStruct, cacheStruct, dst, src, len, page, cacheBuffer, cachePage);
 }
