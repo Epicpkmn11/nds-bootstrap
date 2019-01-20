@@ -353,8 +353,8 @@ bool cardReadDma() {
 	u8* dst = (u8*)(cardStruct[1]);
 	u32 len = cardStruct[2];
     u32	dma = cardStruct[3]; // dma channel
-	void* func = cardStruct[4]; // function to call back once read done
-	void* arg  = cardStruct[5]; // arguments of the function above
+	void* func = (void*)cardStruct[4]; // function to call back once read done
+	void* arg  = (void*)cardStruct[5]; // arguments of the function above
     
     if(dma > 0 && dma <= 4 && func != NULL) {
         isDma = true;

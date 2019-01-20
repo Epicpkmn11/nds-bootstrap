@@ -165,9 +165,9 @@ static void cardReadLED(bool on) {
 				case 2:
 					i2cWriteRegister(0x4A, 0x63, 0xFF);    // Turn power LED purple
 					break;
-				case 3:
-					i2cWriteRegister(0x4A, 0x31, 0x01);    // Turn Camera LED on
-					break;
+				//case 3:
+				//	i2cWriteRegister(0x4A, 0x31, 0x01);    // Turn Camera LED on
+				//	break;
 			}
 		} else {
 			switch(romread_LED) {
@@ -180,40 +180,20 @@ static void cardReadLED(bool on) {
 				case 2:
 					i2cWriteRegister(0x4A, 0x63, 0x00);    // Revert power LED to normal
 					break;
-				case 3:
-					i2cWriteRegister(0x4A, 0x31, 0x00);    // Turn Camera LED off
-					break;
+				//case 3:
+				//	i2cWriteRegister(0x4A, 0x31, 0x00);    // Turn Camera LED off
+				//	break;
 			}
 		}
 	}
 }
 
-static void purpleCardReadLED(bool on) {
-	if (consoleModel < 2) {
+static void cardReadDmaLED(bool on) {
+	if (consoleModel < 2 && romread_LED > 0) {
 		if (on) {
-			switch(romread_LED) {
-				case 0:
-				default:
-					break;
-				case 1:
-					i2cWriteRegister(0x4A, 0x63, 0xFF);    // Turn power LED purple
-					break;
-				case 2:
-					i2cWriteRegister(0x4A, 0x30, 0x13);    // Turn WiFi LED on
-					break;
-			}
+			i2cWriteRegister(0x4A, 0x31, 0x01);    // Turn Camera LED on
 		} else {
-			switch(romread_LED) {
-				case 0:
-				default:
-					break;
-				case 1:
-					i2cWriteRegister(0x4A, 0x63, 0x00);    // Revert power LED to normal
-					break;
-				case 2:
-					i2cWriteRegister(0x4A, 0x30, 0x12);    // Turn WiFi LED off
-					break;
-			}
+			i2cWriteRegister(0x4A, 0x31, 0x00);    // Turn Camera LED off
 		}
 	}
 }
@@ -273,10 +253,11 @@ static bool start_cardRead_arm9(void) {
 	dbg_hexa(marker);	
 	#endif
 
-    if(!isDma)
-	   cardReadLED(true);    // When a file is loading, turn on LED for card read indicator
-     else
-        purpleCardReadLED(true);    // After loading is done, turn off LED for card read indicator
+    if(!isDma) {
+		cardReadLED(true);    // When a file is loading, turn on LED for card read indicator
+    } else {
+		cardReadDmaLED(true);    // When a file is loading via DMA, turn on LED for DMA card read indicator
+	}
 	#ifdef DEBUG
 	nocashMessage("fileRead romFile");
 	#endif
@@ -294,10 +275,11 @@ static bool start_cardRead_arm9(void) {
     	if (*(u32*)(0x0C9328AC) == 0x4B434148) {
     		*(u32*)(0x0C9328AC) = 0xA00;
     	}
-        if(!isDma)
+        if(!isDma) {
             cardReadLED(false);    // After loading is done, turn off LED for card read indicator
-        else
-            purpleCardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        } else {
+            cardReadDmaLED(false);    // After loading is done, turn off LED for DMA card read indicator
+		}
         return true;    
     }
 
@@ -320,10 +302,11 @@ static bool resume_cardRead_arm9(void) {
     	if (*(u32*)(0x0C9328AC) == 0x4B434148) {
     		*(u32*)(0x0C9328AC) = 0xA00;
     	}
-        if(!isDma)
+        if(!isDma) {
             cardReadLED(false);    // After loading is done, turn off LED for card read indicator
-        else
-            purpleCardReadLED(false);    // After loading is done, turn off LED for card read indicator
+        } else {
+            cardReadDmaLED(false);    // After loading is done, turn off LED for DMA card read indicator
+		}
         return true;    
     } 
     else
@@ -357,12 +340,12 @@ static bool resume_cardRead_arm9(void) {
 	dbg_hexa(marker);	
 	#endif
 
-	purpleCardReadLED(true);    // When a file is loading, turn on LED for async card read indicator
+	cardReadDmaLED(true);    // When a file is loading, turn on LED for async card read indicator
 	#ifdef DEBUG
 	nocashMessage("fileRead romFile");
 	#endif
 	fileRead((char*)dst, *romFile, src, len, 0);
-	purpleCardReadLED(false);    // After loading is done, turn off LED for async card read indicator
+	cardReadDmaLED(false);    // After loading is done, turn off LED for async card read indicator
 
 	#ifdef DEBUG
 	dbg_printf("\nread \n");
