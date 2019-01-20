@@ -41,6 +41,7 @@
 
 extern void user_exception(void);
 
+extern vu32* volatile cardStruct0;
 //extern vu32* volatile cacheStruct;
 
 extern u32 ROMinRAM;
@@ -64,6 +65,7 @@ static u32 cacheAddress = retail_CACHE_ADRESS_START_SDK5;
 static u16 cacheSlots = retail_CACHE_SLOTS_32KB_SDK5;
 
 static bool flagsSet = false;
+static bool isDma = false;
 
 static int allocateCacheSlot(void) {
 	int slot = 0;
@@ -102,7 +104,7 @@ static void updateDescriptor(int slot, u32 sector) {
 static void waitForArm7(void) {
     IPC_SendSync(0xEE24);
     int count = 0;
-	while (sharedAddr[3] != (vu32)0) {
+	while (sharedAddr[4] != (vu32)0) {
         count++;
         if(count==20000000){
             IPC_SendSync(0xEE24);
@@ -153,7 +155,8 @@ static inline int cardReadNormal(u8* dst, u32 src, u32 len) {
 		sharedAddr[0] = (vu32)dst;
 		sharedAddr[1] = len;
 		sharedAddr[2] = src;
-		sharedAddr[3] = commandRead;
+		sharedAddr[3] = isDma;
+		sharedAddr[4] = commandRead;
 
 		waitForArm7();
 
@@ -179,7 +182,8 @@ static inline int cardReadNormal(u8* dst, u32 src, u32 len) {
 				sharedAddr[0] = (vu32)buffer;
 				sharedAddr[1] = readSize;
 				sharedAddr[2] = sector;
-				sharedAddr[3] = commandRead;
+				sharedAddr[3] = isDma;
+				sharedAddr[4] = commandRead;
 
 				waitForArm7();
 
@@ -206,7 +210,8 @@ static inline int cardReadNormal(u8* dst, u32 src, u32 len) {
 			sharedAddr[0] = dst;
 			sharedAddr[1] = len2;
 			sharedAddr[2] = buffer+src-sector;
-			sharedAddr[3] = commandRead;
+			sharedAddr[3] = false;
+			sharedAddr[4] = commandRead;
 
 			waitForArm7();
 			// -------------------------------------*/
@@ -245,7 +250,8 @@ static inline int cardReadRAM(u8* dst, u32 src, u32 len) {
 		sharedAddr[0] = dst;
 		sharedAddr[1] = len;
 		sharedAddr[2] = ((dev_CACHE_ADRESS_START_SDK5-0x4000-ndsHeader->arm9binarySize)+src);
-		sharedAddr[3] = commandRead;
+		sharedAddr[3] = false;
+		sharedAddr[4] = commandRead;
 
 		waitForArm7();
 		// -------------------------------------
@@ -262,6 +268,25 @@ static inline int cardReadRAM(u8* dst, u32 src, u32 len) {
 	}
 
 	return 0;
+}
+
+bool cardReadDma() {
+	vu32* volatile cardStruct = cardStruct0;
+
+	u32 src = cardStruct[0];
+	u8* dst = (u8*)(cardStruct[1]);
+	u32 len = cardStruct[2];
+    u32	dma = cardStruct[3]; // dma channel
+	void* func = cardStruct[4]; // function to call back once read done
+	void* arg  = cardStruct[5]; // arguments of the function above
+    
+    if(dma > 0 && dma <= 4 && func != NULL) {
+        isDma = true;
+        return false;                
+    } else {
+        isDma = false;
+        return false;
+    }
 }
 
 int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
@@ -302,7 +327,8 @@ int cardRead(u32* cacheStruct, u8* dst0, u32 src0, u32 len0) {
 	sharedAddr[0] = dst;
 	sharedAddr[1] = len;
 	sharedAddr[2] = src;
-	sharedAddr[3] = commandRead;
+	sharedAddr[3] = false;
+	sharedAddr[4] = commandRead;
 
 	waitForArm7();
 	// -------------------------------------

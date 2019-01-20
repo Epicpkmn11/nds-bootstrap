@@ -356,7 +356,7 @@ bool cardReadDma() {
 	void* func = cardStruct[4]; // function to call back once read done
 	void* arg  = cardStruct[5]; // arguments of the function above
     
-    if(dma > 0 && func != NULL) {
+    if(dma > 0 && dma <= 4 && func != NULL) {
         isDma = true;
         return false;                
     } else {
