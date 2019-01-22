@@ -346,6 +346,78 @@ void __attribute__((target("arm"))) debug8mbMpuFix(){
 	asm("MOV R0,#0\n\tmcr p15, 0, r0, C6,C2,0");
 }
 
+static inline int setupCardReadDma(vu32* volatile cardStruct, u8* dst, u32 src, u32 len, u32 page) {
+	u32 commandRead;
+	u32 sector = (src/readSize)*readSize;
+
+	accessCounter++;
+
+	// Read via the main RAM cache
+	int slot = getSlotForSector(sector);
+	vu8* buffer = getCacheAddress(slot);
+	// Read max CACHE_READ_SIZE via the main RAM cache
+	if (slot == -1) {
+		// Send a command to the ARM7 to fill the RAM cache
+            commandRead = 0x025FFB08;
+
+		slot = allocateCacheSlot();
+
+		buffer = getCacheAddress(slot);
+
+
+		// Write the command
+		sharedAddr[0] = (vu32)buffer;
+		sharedAddr[1] = readSize;
+		sharedAddr[2] = sector;
+		sharedAddr[3] = isDma;
+		sharedAddr[4] = commandRead;
+
+        // do not wait for arm7 and return immediately
+		// waitForArm7();
+        
+        updateDescriptor(slot, sector);	
+
+	} else {
+		updateDescriptor(slot, sector);	
+
+		u32 len2 = len;
+		if ((src - sector) + len2 > readSize) {
+			len2 = sector - src + readSize;
+		}
+
+		if (len2 > 512) {
+			len2 -= src % 4;
+			len2 -= len2 % 32;
+		}
+
+		#ifdef DEBUG
+		// Send a log command for debug purpose
+		// -------------------------------------
+		commandRead = 0x026ff800;
+
+		sharedAddr[0] = dst;
+		sharedAddr[1] = len2;
+		sharedAddr[2] = buffer+src-sector;
+		sharedAddr[3] = false;
+		sharedAddr[4] = commandRead;
+
+		waitForArm7();
+		// -------------------------------------*/
+		#endif
+
+		// TODO Copy via dma
+		memcpy(dst, (u8*)buffer+(src-sector), len2);
+
+		// Update cardi common
+		cardStruct[0] = src + len2;
+		cardStruct[1] = (vu32)(dst + len2);
+		cardStruct[2] = len - len2;
+        
+      }    			    
+	
+	return 0;
+}
+    
 bool cardReadDma() {
 	vu32* volatile cardStruct = cardStruct0;
 
@@ -356,9 +428,34 @@ bool cardReadDma() {
 	void* func = (void*)cardStruct[4]; // function to call back once read done
 	void* arg  = (void*)cardStruct[5]; // arguments of the function above
     
-    if(dma > 0 && dma <= 4 && func != NULL) {
+    if(dma > 0 
+        && dma <= 4 
+        && func != NULL
+        && len > 0
+        && !(((int)dst) & 31)
+        // TODO test data not in ITCM / DTCM
+        // TODO check 512 bytes page alignement 
+        ) {
         isDma = true;
-        return false;                
+        
+        u32 page = (src / 512) * 512;
+        
+        if (src == 0) {
+    		// If ROM read location is 0, do not proceed.
+    		return false;
+    	}
+    
+    	// Fix reads below 0x8000
+    	if (src <= 0x8000){
+    		src = 0x8000 + (src & 0x1FF);
+    	}
+               
+        // TODO optimize the cache flush to avoid full flush according to the read size
+        // Note : cacheFlush disable / reenable irq
+        cacheFlush();
+        
+        setupCardReadDma(cardStruct, dst, src, len, page);
+        return true;                
     } else {
         isDma = false;
         return false;
