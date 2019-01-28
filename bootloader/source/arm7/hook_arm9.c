@@ -91,6 +91,12 @@ int hookNdsRetailArm9(
     u32* dma3Handler = hookLocation + 11;
     u32* ipcSyncHandler = hookLocation + 16;
     u32* cardCompletionIrq = hookLocation + 19;
+    
+    ce9->intr_fifo_orig_return   = *ipcSyncHandler;
+    
+    if (!ROMinRAM) {
+		*ipcSyncHandler = ce9->patches->fifoHandler;
+	}
 
 	nocashMessage("ERR_NONE");
 	return ERR_NONE;

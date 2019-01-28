@@ -60,6 +60,7 @@ patches:
 .word	card_dma_arm9
 .word	cardStructArm9
 .word   card_pull
+.word	fifoHandler
 .word   cacheFlushRef
 .word   readCachedRef
 .word   0x0
@@ -234,5 +235,22 @@ DC_WaitWriteBufferEmpty:
 	ldmfd   sp!, {r0-r11,lr}
 	bx      lr
 	.pool
+    
+fifoHandler:
+@ Hook the return address, then go back to the original function
+	stmdb	sp!, {lr}
+	adr 	lr, code_handler_start_fifo
+	ldr 	r0,	intr_fifo_orig_return
+	bx  	r0
+    
+code_handler_start_fifo:
+	push	{r0-r12} 
+	ldr	r3, =myIrqHandlerFIFO
+	bl	_blx_r3_stub_start_fifo		@ jump to myIrqHandler
+  
+	@ exit after return
+	b	exit
+_blx_r3_stub_start_fifo:
+	bx	r3	
 
 card_engine_end:

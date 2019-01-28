@@ -15,6 +15,7 @@ typedef struct cardengineArm9Patches {
     u32* card_dma_arm9;
     u32* cardStructArm9;
     u32* card_pull;
+    u32* fifoHandler;
     u32* cacheFlushRef;
     u32* readCachedRef;
     u32 offset9;
