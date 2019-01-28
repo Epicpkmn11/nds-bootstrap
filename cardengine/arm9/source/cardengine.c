@@ -23,6 +23,7 @@
 #include <nds/system.h>
 //#include <nds/interrupts.h>
 #include <nds/ipc.h>
+#include <nds/interrupts.h>
 #include <nds/fifomessages.h>
 #include <nds/memory.h> // tNDSHeader
 #include "hex.h"
@@ -127,6 +128,22 @@ static void waitForArm7(void) {
 static bool checkArm7(void) {
     IPC_SendSync(0xEE24);
 	return (sharedAddr[4] == (vu32)0);
+}
+
+static void enableIPCSYNC(void) {
+    // enable IPC_SYNC
+    int oldIME = enterCriticalSection();
+    REG_IPC_SYNC |= IPC_SYNC_IRQ_ENABLE;    
+    REG_IE |= IRQ_IPC_SYNC;
+    leaveCriticalSection(oldIME);
+}
+
+static void disableIPCSYNC(void) {
+    // enable IPC_SYNC
+    int oldIME = enterCriticalSection();
+    REG_IPC_SYNC &= !IPC_SYNC_IRQ_ENABLE;    
+    REG_IE &= !IRQ_IPC_SYNC;
+    leaveCriticalSection(oldIME);
 }
 
 /*static inline bool isGameLaggy(const tNDSHeader* ndsHeader) {
@@ -463,6 +480,7 @@ void continueCardReadDma() {
               }  
         } else { 
             cardStruct[14] = END_FLAG;
+            disableIPCSYNC();
          }
     }
 
@@ -488,8 +506,9 @@ static inline int startCardReadDma(vu32* volatile cardStruct, u8* dst, u32 src, 
 		slot = allocateCacheSlot();
 
 		buffer = getCacheAddress(slot);
-
-
+        
+        enableIPCSYNC();
+        
 		// Write the command
 		sharedAddr[0] = (vu32)buffer;
 		sharedAddr[1] = readSize;
