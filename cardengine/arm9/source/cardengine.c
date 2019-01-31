@@ -446,7 +446,7 @@ void continueCardReadDma() {
         		sharedAddr[0] = (vu32)buffer;
         		sharedAddr[1] = readSize;
         		sharedAddr[2] = sector;
-        		sharedAddr[3] = isDma;
+        		sharedAddr[3] = true;
         		sharedAddr[4] = commandRead;
         
                 // do not wait for arm7 and return immediately
@@ -513,7 +513,7 @@ static inline int startCardReadDma(vu32* volatile cardStruct, u8* dst, u32 src, 
 		sharedAddr[0] = (vu32)buffer;
 		sharedAddr[1] = readSize;
 		sharedAddr[2] = sector;
-		sharedAddr[3] = isDma;
+		sharedAddr[3] = true;
 		sharedAddr[4] = commandRead;
 
         // do not wait for arm7 and return immediately
@@ -588,7 +588,7 @@ bool cardReadDma() {
                
         // TODO optimize the cache flush to avoid full flush according to the read size
         // Note : cacheFlush disable / reenable irq
-        cacheFlush();
+        //cacheFlush();
         
         startCardReadDma(cardStruct, dst, src, len);
         return true;
