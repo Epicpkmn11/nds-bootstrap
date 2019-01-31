@@ -566,8 +566,13 @@ bool cardReadDma() {
         && func != NULL
         && len > 0
         && !(((int)dst) & 31)
-        // TODO test data not in ITCM / DTCM
-        // TODO check 512 bytes page alignement 
+        // test data not in ITCM
+        && dst > 0x02000000
+        // test data not in DTCM
+        && (dst < 0x27C0000 || dst > 0x27C4000) 
+        // check 512 bytes page alignement 
+        && !(((int)len) & 511)
+        && !(((int)src) & 511)
         ) {
         isDma = true;
         
@@ -586,7 +591,8 @@ bool cardReadDma() {
         cacheFlush();
         
         startCardReadDma(cardStruct, dst, src, len);
-        return true;                
+        return true;
+        //return false;                
     } else {
         isDma = false;
         return false;
