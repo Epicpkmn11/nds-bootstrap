@@ -235,6 +235,7 @@ static bool start_cardRead_arm9(void) {
 	u32 dst = *(vu32*)(sharedAddr);
 	u32 len = *(vu32*)(sharedAddr + 1);
 	isDma = *(vu32*)(sharedAddr + 3);
+    
 	#ifdef DEBUG
 	u32 marker = *(vu32*)(sharedAddr + 4);
 
@@ -252,6 +253,8 @@ static bool start_cardRead_arm9(void) {
 	dbg_hexa(dst);
 	dbg_printf("\nlen : \n");
 	dbg_hexa(len);
+    dbg_printf("\nisDma : \n");
+	dbg_hexa(isDma);
 	dbg_printf("\nmarker : \n");
 	dbg_hexa(marker);	
 	#endif
@@ -285,15 +288,6 @@ static bool start_cardRead_arm9(void) {
 		}
         return true;    
     }
-
-	#ifdef DEBUG
-	dbg_printf("\nread \n");
-	if (is_aligned(dst, 4) || is_aligned(len, 4)) {
-		dbg_printf("\n aligned read : \n");
-	} else {
-		dbg_printf("\n misaligned read : \n");
-	}
-	#endif
 }
 
 static bool resume_cardRead_arm9(void) {

@@ -522,10 +522,10 @@ static inline int startCardReadDma(vu32* volatile cardStruct, u8* dst, u32 src, 
 		// -------------------------------------
 		commandRead = 0x026ff800;
 
-		sharedAddr[0] = src;
-		sharedAddr[1] = dst;
-		sharedAddr[2] = len;
-		sharedAddr[3] = true;
+		sharedAddr[0] = dst;
+		sharedAddr[1] = len;
+		sharedAddr[2] = src;
+		sharedAddr[3] = 2;
 		sharedAddr[4] = commandRead;
 
 		waitForArm7();
@@ -601,12 +601,27 @@ bool cardReadDma() {
         // test data not in ITCM
         && dst > 0x02000000
         // test data not in DTCM
-        && (dst < 0x27C0000 || dst > 0x27C4000) 
+        && (dst < 0x27E0000 || dst > 0x27E4000) 
         // check 512 bytes page alignement 
         && !(((int)len) & 511)
         && !(((int)src) & 511)
         ) {
         isDma = true;
+        
+        #ifdef DEBUG
+		// Send a log command for debug purpose
+		// -------------------------------------
+		u32 commandRead = 0x026ff800;
+
+		sharedAddr[0] = dst;
+		sharedAddr[1] = len;
+		sharedAddr[2] = src;
+		sharedAddr[3] = true;
+		sharedAddr[4] = commandRead;
+
+		waitForArm7();
+		// -------------------------------------
+		#endif
         
         if (src == 0) {
     		// If ROM read location is 0, do not proceed.
@@ -626,6 +641,22 @@ bool cardReadDma() {
         return true;
         //return false;                
     } else {
+        #ifdef DEBUG
+		// Send a log command for debug purpose
+		// -------------------------------------
+		u32 commandRead = 0x026ff800;
+
+		sharedAddr[0] = dst;
+		sharedAddr[1] = len;
+		sharedAddr[2] = src;
+		sharedAddr[3] = false;
+		sharedAddr[4] = commandRead;
+
+		waitForArm7();
+		// -------------------------------------
+		#endif
+    
+    
         isDma = false;
         return false;
     }
