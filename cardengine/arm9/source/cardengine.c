@@ -316,11 +316,11 @@ static inline int cardReadRAM(vu32* volatile cardStruct, u32* cacheStruct, u8* d
 			#ifdef DEBUG
 			// Send a log command for debug purpose
 			// -------------------------------------
-			commandRead = 0x026ff800;
+			u32 commandRead = 0x026ff800;
 
 			sharedAddr[0] = dst;
 			sharedAddr[1] = len;
-			sharedAddr[2] = (dsiMode ? dev_CACHE_ADRESS_START_SDK5 : romLocation)-0x4000-ndsHeader->arm9binarySize)+src;
+			sharedAddr[2] = src;
 			sharedAddr[3] = false;
 			sharedAddr[4] = commandRead;
 
@@ -339,7 +339,7 @@ static inline int cardReadRAM(vu32* volatile cardStruct, u32* cacheStruct, u8* d
 			#ifdef DEBUG
 			// Send a log command for debug purpose
 			// -------------------------------------
-			commandRead = 0x026ff800;
+			u32 commandRead = 0x026ff800;
 
 			sharedAddr[0] = page;
 			sharedAddr[1] = len2;
@@ -388,6 +388,8 @@ void continueCardReadDma() {
     if(dmaReadOnArm7) {
         if(!checkArm7()) return;
         
+
+        
         dmaReadOnArm7 = false;
         
         u32 src = cardStruct[0];
@@ -396,6 +398,21 @@ void continueCardReadDma() {
         u32	dma = cardStruct[3]; // dma channel
     	void* func = (void*)cardStruct[4]; // function to call back once read done
     	void* arg  = (void*)cardStruct[5]; // arguments of the function above
+        
+        #ifdef DEBUG
+		// Send a log command for debug purpose
+		// -------------------------------------
+		commandRead = 0x026ff800;
+
+		sharedAddr[0] = src;
+		sharedAddr[1] = dst;
+		sharedAddr[2] = len;
+		sharedAddr[3] = true;
+		sharedAddr[4] = commandRead;
+
+		waitForArm7();
+		// -------------------------------------
+		#endif
         
         u32 sector = (src/readSize)*readSize;
         
@@ -500,6 +517,21 @@ static inline int startCardReadDma(vu32* volatile cardStruct, u8* dst, u32 src, 
 	vu8* buffer = getCacheAddress(slot);
 	// Read max CACHE_READ_SIZE via the main RAM cache
 	if (slot == -1) {
+        #ifdef DEBUG
+		// Send a log command for debug purpose
+		// -------------------------------------
+		commandRead = 0x026ff800;
+
+		sharedAddr[0] = src;
+		sharedAddr[1] = dst;
+		sharedAddr[2] = len;
+		sharedAddr[3] = true;
+		sharedAddr[4] = commandRead;
+
+		waitForArm7();
+		// -------------------------------------
+		#endif
+    
 		// Send a command to the ARM7 to fill the RAM cache
         commandRead = 0x025FFB08;
 

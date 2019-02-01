@@ -203,6 +203,7 @@ static void log_arm9(void) {
 	u32 src = *(vu32*)(sharedAddr+2);
 	u32 dst = *(vu32*)(sharedAddr);
 	u32 len = *(vu32*)(sharedAddr+1);
+    u32 isDma = *(vu32*)(sharedAddr+3);
 	u32 marker = *(vu32*)(sharedAddr+4);
 
 	dbg_printf("\ncard read received\n");
@@ -218,6 +219,8 @@ static void log_arm9(void) {
 	dbg_hexa(dst);
 	dbg_printf("\nlen : \n");
 	dbg_hexa(len);
+    dbg_printf("\nisDma : \n");
+	dbg_hexa(isDma);
 	dbg_printf("\nmarker : \n");
 	dbg_hexa(marker);
 
