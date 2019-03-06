@@ -75,5 +75,6 @@ deploy:
   prerelease: true
   name: nds-bootstrap | $COMMIT_TAG
   body: $COMMIT_MESSAGE
-  notifications:
-    webhooks: $WEBHOOK_URL_RC
+
+notifications:
+  webhooks: $WEBHOOK_URL_RC
