@@ -54,6 +54,9 @@ after_failure:
   - chmod +x send.sh
   - ./send.sh failure $WEBHOOK_URL
 
+notifications:
+  webhooks: $WEBHOOK_URL_RC
+
 before_deploy:
   - git config --local user.name "TWLBot"
   - git clone https://$GITHUB_TOKEN@github.com/TWLBot/Builds.git
@@ -75,6 +78,3 @@ deploy:
   prerelease: true
   name: nds-bootstrap | $COMMIT_TAG
   body: $COMMIT_MESSAGE
-
-notifications:
-  webhooks: $WEBHOOK_URL_RC
