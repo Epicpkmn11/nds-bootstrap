@@ -17,14 +17,14 @@ extern bool returnToMenu;
 extern void rebootConsole(void);
 
 void inGameMenu(void) {
-	sharedAddr[4] = 0x554E454D; // 'MENU'
+	sharedAddr[4] = 'MENU';
 	IPC_SendSync(0x9);
 	int volBak = REG_MASTER_VOLUME;
 	REG_MASTER_VOLUME = 0;
 	int oldIME = enterCriticalSection();
 
 	int timeOut = 0;
-	while (sharedAddr[5] != 0x59444552) { // 'REDY'
+	while (sharedAddr[5] != 'REDY') {
 		while (REG_VCOUNT != 191) swiDelay(100);
 		while (REG_VCOUNT == 191) swiDelay(100);
 
@@ -35,7 +35,7 @@ void inGameMenu(void) {
 		}
 	}
 
-	if (sharedAddr[4] == 0x554E454D) {
+	if (sharedAddr[4] == 'MENU') {
 		bool exitMenu = false;
 		while (!exitMenu) {
 			sharedAddr[5] = ~REG_KEYINPUT & 0x3FF;
@@ -45,28 +45,28 @@ void inGameMenu(void) {
 			while (REG_VCOUNT == 191) swiDelay(100);
 
 			switch (sharedAddr[4]) {
-				case 0x54495845: // EXIT
+				case 'EXIT':
 					exitMenu = true;
 					break;
-				case 0x54495551: // QUIT
+				case 'QUIT':
 					rebootConsole();
 					exitMenu = true;
 					break;
-				case 0x524D4152: // RAMR
+				case 'RAMR':
 					tonccpy((u32*)((u32)sharedAddr[0]), (u32*)((u32)sharedAddr[1]), 0xC0);
 					break;
-				case 0x574D4152: // RAMW
+				case 'RAMW':
 					tonccpy((u8*)((u32)sharedAddr[1])+sharedAddr[2], (u8*)((u32)sharedAddr[0])+sharedAddr[2], 1);
 					break;
 				default:
 					break;
 			}
 
-			sharedAddr[4] = 0x554E454D; // MENU
+			sharedAddr[4] = 'MENU';
 		}
 	}
 
-	sharedAddr[4] = 0x54495845; // EXIT
+	sharedAddr[4] = 'EXIT';
 
 	leaveCriticalSection(oldIME);
 	REG_MASTER_VOLUME = volBak;

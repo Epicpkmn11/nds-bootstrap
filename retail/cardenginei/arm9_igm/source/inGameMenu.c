@@ -92,6 +92,7 @@ static void printChar(int x, int y, unsigned char c, int palette) {
 	BG_MAP_RAM_SUB(15)[y * 0x20 + x] = c | palette << 12;
 }
 
+#ifndef B4DS // currently unused in B4DS mode
 static void printDec(int x, int y, u32 val, int digits, int palette) {
 	u16 *dst = BG_MAP_RAM_SUB(15) + y * 0x20 + x;
 	for(int i = digits - 1; i >= 0; i--) {
@@ -99,6 +100,7 @@ static void printDec(int x, int y, u32 val, int digits, int palette) {
 		val /= 10;
 	}
 }
+#endif
 
 static void printHex(int x, int y, u32 val, u8 bytes, int palette) {
 	u16 *dst = BG_MAP_RAM_SUB(15) + y * 0x20 + x;
@@ -243,8 +245,8 @@ static void screenshot(void) {
 		}
 	}
 
-	sharedAddr[4] = 0x50505353;
-	while (sharedAddr[4] == 0x50505353) {
+	sharedAddr[4] = 'SSPP';
+	while (sharedAddr[4] == 'SSPP') {
 		while (REG_VCOUNT != 191);
 		while (REG_VCOUNT == 191);
 	}
@@ -274,8 +276,8 @@ static void screenshot(void) {
 	tonccpy(VRAM_x(vramBank), vramBak, 0x18000);
 	VRAM_x_CR(vramBank) = vramCr;
 
-	sharedAddr[4] = 0x544F4853;
-	while (sharedAddr[4] == 0x544F4853) {
+	sharedAddr[4] = 'SHOT';
+	while (sharedAddr[4] == 'SHOT') {
 		while (REG_VCOUNT != 191);
 		while (REG_VCOUNT == 191);
 	}
@@ -441,8 +443,8 @@ static void ramViewer(void) {
 		if (arm7Ram && !ramLoaded) {
 			sharedAddr[0] = (vu32)arm7RamBuffer;
 			sharedAddr[1] = (vu32)address;
-			sharedAddr[4] = 0x524D4152; // RAMR
-			while (sharedAddr[4] == 0x524D4152) {
+			sharedAddr[4] = 'RAMR';
+			while (sharedAddr[4] == 'RAMR') {
 				while (REG_VCOUNT != 191);
 				while (REG_VCOUNT == 191);
 			}
@@ -553,8 +555,8 @@ static void ramViewer(void) {
 					sharedAddr[0] = (vu32)arm7RamBuffer;
 					sharedAddr[1] = (vu32)address;
 					sharedAddr[2] = cursorPosition;
-					sharedAddr[4] = 0x574D4152; // RAMW
-					while (sharedAddr[4] == 0x574D4152) {
+					sharedAddr[4] = 'RAMW';
+					while (sharedAddr[4] == 'RAMW') {
 						while (REG_VCOUNT != 191);
 						while (REG_VCOUNT == 191);
 					}
@@ -624,7 +626,7 @@ void inGameMenu(s8* mainScreen) {
 	}
 
 	// Let ARM7 know the menu loaded
-	sharedAddr[5] = 0x59444552; // 'REDY'
+	sharedAddr[5] = 'REDY';
 
 	// Wait for keys to be released
 	drawMainMenu();
@@ -638,7 +640,7 @@ void inGameMenu(s8* mainScreen) {
 	} while(KEYS & igmText.hotkey);
 
 	u8 cursorPosition = 0;
-	while (sharedAddr[4] == 0x554E454D) {
+	while (sharedAddr[4] == 'MENU') {
 		drawMainMenu();
 		drawCursor(cursorPosition);
 
@@ -666,18 +668,18 @@ void inGameMenu(s8* mainScreen) {
 						while (REG_VCOUNT != 191);
 						while (REG_VCOUNT == 191);
 					} while(KEYS & KEY_A);
-					sharedAddr[4] = 0x54495845; // EXIT
+					sharedAddr[4] = 'EXIT';
 					break;
 				case 1:
-					sharedAddr[3] = 0x52534554; // RSET
-					sharedAddr[4] = 0x54455352; // RSET
+					sharedAddr[3] = 'RSET';
+					sharedAddr[4] = 'RSET';
 					break;
 				case 2:
 					screenshot();
 					break;
 				case 3:
-					sharedAddr[4] = 0x444D4152; // RAMD
-					while (sharedAddr[4] == 0x444D4152);
+					sharedAddr[4] = 'RAMD';
+					while (sharedAddr[4] == 'RAMD');
 					break;
 				case 4:
 					optionsMenu(mainScreen);
@@ -687,8 +689,8 @@ void inGameMenu(s8* mainScreen) {
 					ramViewer();
 					break;
 				case 6:
-					sharedAddr[3] = 0x54495845; // EXIT
-					sharedAddr[4] = 0x54495551; // QUIT
+					sharedAddr[3] = 'EXIT';
+					sharedAddr[4] = 'QUIT';
 					break;
 				default:
 					break;
@@ -700,7 +702,7 @@ void inGameMenu(s8* mainScreen) {
 						while (REG_VCOUNT != 191);
 						while (REG_VCOUNT == 191);
 					} while(KEYS & KEY_A);
-					sharedAddr[4] = 0x54495845; // EXIT
+					sharedAddr[4] = 'EXIT';
 					break;
 				case 1:
 					optionsMenu(mainScreen);
@@ -710,8 +712,8 @@ void inGameMenu(s8* mainScreen) {
 					ramViewer();
 					break;
 				case 3:
-					sharedAddr[3] = 0x52534554; // RSET
-					sharedAddr[4] = 0x54495551; // QUIT
+					sharedAddr[3] = 'RSET';
+					sharedAddr[4] = 'QUIT';
 					break;
 				default:
 					break;
@@ -722,7 +724,7 @@ void inGameMenu(s8* mainScreen) {
 				while (REG_VCOUNT != 191);
 				while (REG_VCOUNT == 191);
 			} while(KEYS & KEY_B);
-			sharedAddr[4] = 0x54495845; // EXIT
+			sharedAddr[4] = 'EXIT';
 		}
 		#ifndef B4DS
 		else if (KEYS & KEY_R) {
@@ -730,7 +732,7 @@ void inGameMenu(s8* mainScreen) {
 				while (REG_VCOUNT != 191);
 				while (REG_VCOUNT == 191);
 			} while(KEYS & KEY_R);
-			sharedAddr[4] = 0x50455453; // STEP
+			sharedAddr[4] = 'STEP';
 		}
 		#endif
 	}
